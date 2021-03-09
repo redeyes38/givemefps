@@ -6,7 +6,7 @@ using SimpleJSON;
 using System.Linq;
 
 /// <summary>
-/// Give Me FPS Version v3.1.1
+/// Give Me FPS Version v3.1.2
 /// By Redeyes
 /// Session plugin to quickly set ALL person options to give more frames per second at diffently levels to user requirements
 /// </summary>
@@ -17,7 +17,7 @@ namespace Redeyes{
     {
         private UIDynamicButton btn;
 
-        private JSONStorableBool ClothSimState;
+        private JSONStorableBool clothSimState;
 
         private JSONStorableBool HairSimulationState;
         private UIDynamicToggle onToggleHairSimulationState;
@@ -82,7 +82,16 @@ namespace Redeyes{
         private JSONStorableStringChooser physicsRateChooser;
         private List<string> physicsRateChoices = new List<string>();
 
+        private JSONStorableBool clothSimState_orginal;
+        private JSONStorableBool softPhysicsState_orginal;
+        private JSONStorableStringChooser msaaLevelchooser_orginal;
+        private JSONStorableFloat pixelLightCountValue_orginal;
+        private JSONStorableBool mirrorReflectionsState_orginal;
+        private JSONStorableFloat smoothPassesValue_orginal;
+        private JSONStorableStringChooser ShaderLODChooser_orginal;
+
         private string msaa_popup;
+        private bool first_time_bench = true;
 
         public override void Init()
         {
@@ -108,13 +117,14 @@ namespace Redeyes{
                 btn = CreateButton("Give me ALL the FPS!");
                 btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Fast", true, "1", "512", false); });
 
-                btn = CreateButton("VAM Default");
+                btn = CreateButton("Atoms VAM Defaults");
                 btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 2, true, true, true, "Quality", false , "8", "1024", false); });
 
                 //cloth sim toggle
-                ClothSimState = new JSONStorableBool("Disable All cloth Sim ", false);
-                RegisterBool(ClothSimState);
-                UIDynamicToggle onToggleClothSimState = CreateToggle(ClothSimState, false);
+                clothSimState = new JSONStorableBool("Disable All cloth Sim ", false);
+                clothSimState_orginal = new JSONStorableBool("Disable All cloth Sim ", false);
+                RegisterBool(clothSimState);
+                UIDynamicToggle onToggleClothSimState = CreateToggle(clothSimState, false);
                 onToggleClothSimState.toggle.onValueChanged.AddListener((on) =>
                 {
                     ToggleSimClothFPS(on);
@@ -133,6 +143,7 @@ namespace Redeyes{
 
                 //mirrorReflections
                 mirrorReflectionsState = new JSONStorableBool("Mirror Reflection", UserPreferences.singleton.mirrorReflections);
+                mirrorReflectionsState_orginal = new JSONStorableBool("Mirror Reflection", UserPreferences.singleton.mirrorReflections);
                 RegisterBool(mirrorReflectionsState);
                 onTogglemirrorReflectionsState = CreateToggle(mirrorReflectionsState, false);
                 onTogglemirrorReflectionsState.toggle.onValueChanged.AddListener((on) =>
@@ -142,6 +153,7 @@ namespace Redeyes{
 
                 //Soft physics
                 softPhysicsState = new JSONStorableBool("Soft Body Physics", UserPreferences.singleton.softPhysics);
+                softPhysicsState_orginal = new JSONStorableBool("Soft Body Physics", UserPreferences.singleton.softPhysics);
                 RegisterBool(softPhysicsState);
                 onTogglesoftPhysicsState = CreateToggle(softPhysicsState, false);
                 onTogglesoftPhysicsState.toggle.onValueChanged.AddListener((on) =>
@@ -154,6 +166,7 @@ namespace Redeyes{
                 ShaderLODChoices.Add("Medium");
                 ShaderLODChoices.Add("High");
                 ShaderLODChooser = new JSONStorableStringChooser("Shader Quality", ShaderLODChoices, UserPreferences.singleton.shaderLOD.ToString(), "Shader Quality", doShaderLODChoice);
+                ShaderLODChooser_orginal = new JSONStorableStringChooser("Shader Quality", ShaderLODChoices, UserPreferences.singleton.shaderLOD.ToString(), "Shader Quality", doShaderLODChoice);
                 RegisterStringChooser(ShaderLODChooser);
                 CreatePopup(ShaderLODChooser, false);
 
@@ -181,11 +194,13 @@ namespace Redeyes{
                     break;
                 }
                 msaaLevelchooser = new JSONStorableStringChooser("MSAA Level", msaaLevelChoices, msaa_popup, "MSAA Level", doMSAAlevelChoice);
+                msaaLevelchooser_orginal = new JSONStorableStringChooser("MSAA Level", msaaLevelChoices, msaa_popup, "MSAA Level", doMSAAlevelChoice);
                 RegisterStringChooser(msaaLevelchooser);
                 CreatePopup(msaaLevelchooser, false);
 
                 //pixelLightCount
                 pixelLightCountValue = new JSONStorableFloat("Pixel Light Count", UserPreferences.singleton.pixelLightCount, pixelLightCountCallback, 0f, 6, true);
+                pixelLightCountValue_orginal = new JSONStorableFloat("Pixel Light Count", UserPreferences.singleton.pixelLightCount, pixelLightCountCallback, 0f, 6, true);
                 RegisterFloat(pixelLightCountValue);
                 pixelLightCountSlider = CreateSlider(pixelLightCountValue, false);
                 pixelLightCountSlider.slider.wholeNumbers = true;
@@ -194,6 +209,7 @@ namespace Redeyes{
 
                 //smooth passes
                 smoothPassesValue = new JSONStorableFloat("Smooth Passes", UserPreferences.singleton.smoothPasses, smoothPassesCallback, 0, 4, true);
+                smoothPassesValue_orginal = new JSONStorableFloat("Smooth Passes", UserPreferences.singleton.smoothPasses, smoothPassesCallback, 0, 4, true);
                 RegisterFloat(smoothPassesValue);
                 smoothPassesSlider = CreateSlider(smoothPassesValue, false);
                 smoothPassesSlider.slider.wholeNumbers = true;
@@ -232,7 +248,7 @@ namespace Redeyes{
                 physicsUpdateCapSlider.quickButtonsEnabled  = false;
 
                 SetupInfoText(this, 
-                    "<color=#606060><size=40><b>Give Me FPS v3.1.1</b></size>\nA Session Plugin.\n" +
+                    "<color=#606060><size=40><b>Give Me FPS v3.1.2</b></size>\nA Session Plugin.\n" +
                     //"These will set softbody physics for Tongue, breast & glute on/off to gain fps\n\n" +
                     "4 Quick buttons and cloth sim - with user fine tuning of the options the 4 buttons use + performance preferences for easy access</color>\n\n" +
                     "<b>Give me some FPS - Recommend:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
@@ -339,12 +355,14 @@ namespace Redeyes{
                     470.0f, true
                 );
 
-                btn = CreateButton("CPU Bench", true);
+                btn = CreateButton("CPU Bench - Soft Body physics On", true);
                 btn.button.onClick.AddListener(() => { CPUbench(); });
 
-                btn = CreateButton("CPU Bench - Soft Body physics off", true);
+                btn = CreateButton("CPU Bench - Soft Body physics Off", true);
                 btn.button.onClick.AddListener(() => { CPUbenchNoSoftPhysics(); });
 
+                btn = CreateButton("Restore Perforamnce Parameters", true);
+                btn.button.onClick.AddListener(() => { restore_vam_performance_parameters(); });
             }
             catch (Exception e)
             {
@@ -355,7 +373,11 @@ namespace Redeyes{
         //CPU Bench
         public void CPUbench()
         {
-            ClothSimState.val = true;
+            if (first_time_bench){
+                store_vam_performance_parameters();
+                first_time_bench = false;
+            }
+            clothSimState.val = true;
             softPhysicsState.val = true;
             msaaLevelchooser.val = "Off";
             pixelLightCountValue.val = 0;
@@ -368,7 +390,11 @@ namespace Redeyes{
         //CPU Bench
         public void CPUbenchNoSoftPhysics()
         {
-            ClothSimState.val = true;
+            if (first_time_bench){
+                store_vam_performance_parameters();
+                first_time_bench = false;
+            }
+            clothSimState.val = true;
             softPhysicsState.val = false;
             msaaLevelchooser.val = "Off";
             pixelLightCountValue.val = 0;
@@ -376,6 +402,32 @@ namespace Redeyes{
             smoothPassesValue.val = 0 ;
             ShaderLODChooser.val ="Low";
             ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Fast", true, "1", "512", false);
+        }
+
+        //CPU Bench
+        public void store_vam_performance_parameters()
+        {
+            SuperController.LogMessage("clothSimState.val = " + clothSimState.val);
+            clothSimState_orginal.val = clothSimState.val;
+            softPhysicsState_orginal.val = softPhysicsState.val;
+            msaaLevelchooser_orginal.val = msaaLevelchooser.val;
+            pixelLightCountValue_orginal.val = pixelLightCountValue.val;
+            mirrorReflectionsState_orginal.val = mirrorReflectionsState.val;
+            smoothPassesValue_orginal.val = smoothPassesValue.val;
+            ShaderLODChooser_orginal.val = ShaderLODChooser.val;
+        }
+
+        //CPU Bench
+        public void restore_vam_performance_parameters()
+        {
+            clothSimState.val = clothSimState_orginal.val;
+            softPhysicsState.val = softPhysicsState_orginal.val;
+            msaaLevelchooser.val = msaaLevelchooser_orginal.val;
+            pixelLightCountValue.val = pixelLightCountValue_orginal.val;
+            mirrorReflectionsState.val = mirrorReflectionsState_orginal.val;
+            smoothPassesValue.val = smoothPassesValue_orginal.val;
+            ShaderLODChooser.val = ShaderLODChooser_orginal.val;
+            ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 2, true, true, true, "Quality", false , "8", "1024", false);
         }
 
         //Preferences
@@ -532,9 +584,9 @@ namespace Redeyes{
             shaderChooser.val = shaderTypeValue;
 
             if (!hairOnly) {
-                onToggleBreastPhysicsState.toggle.isOn = BreastPhysicsState;
-                onToggleLowerPhysicsState.toggle.isOn = LowerPhysicsState;
-                onToggleTonguePhysicsState.toggle.isOn = TonguePhysicsState;
+                onToggleBreastPhysicsState.toggle.isOn = !BreastPhysicsState;
+                onToggleLowerPhysicsState.toggle.isOn = !LowerPhysicsState;
+                onToggleTonguePhysicsState.toggle.isOn = !TonguePhysicsState;
                 onToggledisablePixelLightState.toggle.isOn = disablePixelLightsState;
                 reflectionTextureSizeChooser.val = textureSizeValue;
             }
