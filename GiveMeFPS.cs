@@ -93,15 +93,16 @@ namespace Redeyes{
         private JSONStorableBool overrideScenePreferencesState;
 
         private string msaa_popup;
+        private float count=0;
         private bool first_time_bench = true;
-        private int update_num=0;
-        private bool startup_finished = false;
 
         public override void Init()
         {
             try
             {
                 SuperController.singleton.onSceneLoadedHandlers += OnSceneLoaded;
+                SuperController.singleton.onAtomUIDsChangedHandlers += OnAtomUIDsChanged;
+                
                 if (containingAtom.type != "CoreControl" && containingAtom.type != "SessionPluginManager")
                 {
                     SuperController.LogError($"Please load GiveMeFPS as a Session or Scene Plugin, not with a '{containingAtom.type}' atom.");
@@ -379,8 +380,16 @@ namespace Redeyes{
                 btn = CreateButton("CPU Bench - Soft Body physics Off", true);
                 btn.button.onClick.AddListener(() => { CPUbenchNoSoftPhysics(); });
 
-                btn = CreateButton("Restore Perforamnce Parameters", true);
+                btn = CreateButton("Restore Performance Parameters", true);
                 btn.button.onClick.AddListener(() => { restore_vam_performance_parameters(); });
+
+                SetupInfoText(this,
+                    "<color=#606060><size=40><b>Adjust Person On Load Look</b></size>\n" +
+                    "The plugin will attempt to adjust a person on loading a look\n\n" +
+                    "However it's only possible to do this if the name of the look changes (OnAtomUIDsChanged)\n\n" +
+                    "If the name of the loaded look is the same as the current person, it won't apply the settings</color>\n\n",
+                    480.0f, true
+                );
             }
             catch (Exception e)
             {
@@ -393,7 +402,35 @@ namespace Redeyes{
         {
             try {
                 if (overrideScenePreferencesState.val) {
-                    SuperController.LogMessage("GiveMeFPS - updated scene with user preferences");
+                    SuperController.LogMessage("GiveMeFPS - updated scene with user preferences test");
+                    ToggleHairSimulationFPS(HairSimulationState.val);
+                    HairMultiplierCallback(HairMultiplierValue);
+                    CurveDensityCallback(CurveDensityValue);
+                    HairWidthValueCallback(HairWidthValue);
+                    iterationsCallback(iterationsValue);
+                    doShaderChoice(shaderChooser.val);
+                    ToggleBreastPhysicsFPS(BreastPhysicsState.val);
+                    ToggleLowerPhysicsFPS(LowerPhysicsState.val);
+                    ToggleTonguePhysicsFPS(TonguePhysicsState.val);
+                    doReflectionTextureChoice(reflectionTextureSizeChooser.val);
+                    onToggledisablePixelLightStateFPS(disablePixelLightsState.val);
+                }
+            }
+            catch (Exception e) {
+                SuperController.LogError("Exception caught: " + e);
+            }
+        }
+
+        private void OnAtomUIDsChanged(List<string> test)
+        {
+            count++;
+            try {
+                if (overrideScenePreferencesState.val) {
+                     foreach(string str in test)
+                     {
+                       SuperController.LogMessage("GiveMeFPS - updated atom when appearance changes user preferences" + count + "str" + str);
+                     }
+                    SuperController.LogMessage("GiveMeFPS - updated atom when appearance changes user preferences" + count);
                     ToggleHairSimulationFPS(HairSimulationState.val);
                     HairMultiplierCallback(HairMultiplierValue);
                     CurveDensityCallback(CurveDensityValue);
@@ -502,7 +539,7 @@ namespace Redeyes{
         {
             if ( renderScaleValue.val >= 0.5f && renderScaleValue.val <= 2.0f)
             {
-            UserPreferences.singleton.renderScale = (int)renderScaleValue.val;
+            UserPreferences.singleton.renderScale = renderScaleValue.val;
             }
         }
 
