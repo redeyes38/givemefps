@@ -6,7 +6,7 @@ using SimpleJSON;
 using System.Linq;
 
 /// <summary>
-/// Give Me FPS Version v3.2.1
+/// Give Me FPS Version v3.2.2
 /// By Redeyes
 /// Session plugin to quickly set ALL person options to give more frames per second at diffently levels to user requirements
 /// </summary>
@@ -267,7 +267,7 @@ namespace Redeyes{
                 physicsUpdateCapSlider.quickButtonsEnabled  = false;
 
                 SetupInfoText(this, 
-                    "<color=#606060><size=40><b>Give Me FPS v3.2.1</b></size>\nA Session Plugin.\n" +
+                    "<color=#606060><size=40><b>Give Me FPS v3.2.2</b></size>\nA Session Plugin.\n" +
                     //"These will set softbody physics for Tongue, breast & glute on/off to gain fps\n\n" +
                     "4 Quick buttons and cloth sim - with user fine tuning of the options the 4 buttons use + performance preferences for easy access</color>\n\n" +
                     "<b>Give me some FPS - Recommend:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
@@ -426,11 +426,11 @@ namespace Redeyes{
             count++;
             try {
                 if (overrideScenePreferencesState.val) {
-                     foreach(string str in test)
-                     {
-                       SuperController.LogMessage("GiveMeFPS - updated atom when appearance changes user preferences" + count + "str" + str);
-                     }
-                    SuperController.LogMessage("GiveMeFPS - updated atom when appearance changes user preferences" + count);
+                     //foreach(string str in test)
+                     //{
+                     //  SuperController.LogMessage("GiveMeFPS - updated atom when appearance changes user preferences" + count + "str" + str);
+                     //}
+                    //SuperController.LogMessage("GiveMeFPS - updated atom when appearance changes user preferences" + count);
                     ToggleHairSimulationFPS(HairSimulationState.val);
                     HairMultiplierCallback(HairMultiplierValue);
                     CurveDensityCallback(CurveDensityValue);
