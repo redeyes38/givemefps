@@ -6,7 +6,7 @@ using SimpleJSON;
 using System.Linq;
 
 /// <summary>
-/// Give Me FPS Version v3.4.0
+/// Give Me FPS Version v3.4.1
 /// By Redeyes
 /// Session plugin to quickly set ALL person options to give more frames per second at diffently levels to user requirements
 /// </summary>
@@ -310,7 +310,7 @@ namespace Redeyes{
                 physicsUpdateCapSlider.quickButtonsEnabled  = false;
 
                 SetupInfoText(this, 
-                    "<color=#606060><size=40><b>Give Me FPS v3.4.0</b></size>\nA Session Plugin.\n" +
+                    "<color=#606060><size=40><b>Give Me FPS v3.4.1</b></size>\nA Session Plugin.\n" +
                     //"These will set softbody physics for Tongue, breast & glute on/off to gain fps\n\n" +
                     "4 Quick buttons and cloth sim - with user fine tuning of the options the 4 buttons use + performance preferences for easy access</color>\n\n" +
                     "<b>Give me some FPS - Recommend:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
@@ -435,7 +435,7 @@ namespace Redeyes{
 
                 SetupInfoText(this,
                     "<color=#606060><size=40><b>Dynamic Adjust on load</b></size>\n" +
-                    "This will set glute softbody physics off & disable all advanced colliders when scene contains more than the number of persons selected</color>\n\n",
+                    "This will set glute softbody physics off & disable all advanced colliders when scene contains more than the number of girls (males not counted)</color>\n\n",
                     237.0f, true
                 );
 
@@ -496,7 +496,11 @@ namespace Redeyes{
                     {
                         if (atom.type == "Person")
                         {
-                            count++;
+                            JSONStorable geometry = atom.GetStorableByID("geometry");
+                            DAZCharacterSelector character = geometry as DAZCharacterSelector;
+                            if (!character.selectedCharacter.isMale) {
+                                count++;
+                            }
                         }
                     }
                     SuperController.LogMessage("GiveMeFPS - updated scene with user preferences");
