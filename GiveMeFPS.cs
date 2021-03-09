@@ -6,7 +6,7 @@ using SimpleJSON;
 using System.Linq;
 
 /// <summary>
-/// Give Me FPS Version 1.0.0
+/// Give Me FPS Version v3.1
 /// By Redeyes
 /// Session plugin to quickly set ALL person options to give more frames per second at diffently levels to user requirements
 /// </summary>
@@ -82,7 +82,6 @@ namespace Redeyes{
         private JSONStorableStringChooser physicsRateChooser;
         private List<string> physicsRateChoices = new List<string>();
 
-        private bool _dirty;
         private string msaa_popup;
 
         public override void Init()
@@ -101,16 +100,16 @@ namespace Redeyes{
                 
                 //Quick buttons
                 btn = CreateButton("Give me some FPS - Recommend");
-                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, false, false, "Quality", true, "1", "1024"); });
+                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, false, false, "Quality", true, "1", "1024", false); });
 
                 btn = CreateButton("Give me some FPS - Hair Only");
-                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, true, true, "Quality", false, "8", "1024"); });
+                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, true, true, "Quality", false, "8", "1024", true); });
 
                 btn = CreateButton("Give me ALL the FPS!");
-                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Fast", true, "1", "512"); });
+                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Fast", true, "1", "512", false); });
 
                 btn = CreateButton("VAM Default");
-                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 2, true, true, true, "Quality", false , "8", "1024"); });
+                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 2, true, true, true, "Quality", false , "8", "1024", false); });
 
                 //cloth sim toggle
                 ClothSimState = new JSONStorableBool("All clothes Sim On/Off", true);
@@ -233,7 +232,7 @@ namespace Redeyes{
                 physicsUpdateCapSlider.quickButtonsEnabled  = false;
 
                 SetupInfoText(this, 
-                    "<color=#606060><size=40><b>Give Me FPS v3.0</b></size>\nA Session Plugin.\n" +
+                    "<color=#606060><size=40><b>Give Me FPS v3.1</b></size>\nA Session Plugin.\n" +
                     //"These will set softbody physics for Tongue, breast & glute on/off to gain fps\n\n" +
                     "4 Quick buttons and cloth sim - with user fine tuning of the options the 4 buttons use + performance preferences for easy access</color>\n\n" +
                     "<b>Give me some FPS - Recommend:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
@@ -241,7 +240,7 @@ namespace Redeyes{
                     "<b>Give me ALL the FPS!:</b> In addition to recommended - Turns off breast softbody physics, Hair sim off, Hair Curve Density 10 - Multiplier 2, reflections texture size 512.\n\n" +
                     "<b>Default:</b> Switch all settings back to VAM defaults (this isn't the same as the scene loaded with)\n\n" +
                     "<b>Toggle all clothes Sim On/Off:</b> Toggles all clothing simulation Off / On \n\n",
-                    2100.0f, false
+                    1100.0f, false
                 );
 
                 //start if user fine tuning
@@ -331,12 +330,50 @@ namespace Redeyes{
                 reflectionTextureSizeChooser = new JSONStorableStringChooser("Reflection Texture Size", reflectionTextureChoices, "1024", "Reflection Texture Size", doReflectionTextureChoice);
                 RegisterStringChooser(reflectionTextureSizeChooser);
                 CreatePopup(reflectionTextureSizeChooser, true);
+                
+
+                SetupInfoText(this,
+                    "<color=#606060><size=40><b>CPU Bench FPS</b></size>\n" +
+                    "WARNING - These buttons will adjust performance parameters to reduce as much load the GPU as possible - this should there for show how many FPS a good GPU should be able to give\n\n" +
+                    "The real killer of CPU you'll find is the softbody physics - this is why I recommend switching of tongue and glute softbody physics as it'll give you really good FPS</color>\n\n",
+                    470.0f, true
+                );
+
+                btn = CreateButton("CPU Bench", true);
+                btn.button.onClick.AddListener(() => { CPUbench(); });
+
+                btn = CreateButton("No Soft Body physics (CPU KILLER)", true);
+                btn.button.onClick.AddListener(() => { CPUbenchNoSoftPhysics(); });
 
             }
             catch (Exception e)
             {
                 SuperController.LogError("Failed to initialize plugin: " + e);
             }
+        }
+
+        //CPU Bench
+        public void CPUbench()
+        {
+           softPhysicsState.val = true;
+            msaaLevelchooser.val = "Off";
+            pixelLightCountValue.val = 0;
+            mirrorReflectionsState.val = false;
+            smoothPassesValue.val = 0 ;
+            ShaderLODChooser.val ="Low";
+            ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, true, true, true, "Fast", true, "1", "512", false);
+        }
+
+        //CPU Bench
+        public void CPUbenchNoSoftPhysics()
+        {
+            softPhysicsState.val = false;
+            msaaLevelchooser.val = "Off";
+            pixelLightCountValue.val = 0;
+            mirrorReflectionsState.val = false;
+            smoothPassesValue.val = 0 ;
+            ShaderLODChooser.val ="Low";
+            ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Fast", true, "1", "512", false);
         }
 
         //Preferences
@@ -483,19 +520,22 @@ namespace Redeyes{
         }
 
         //Quick buttons
-        public void ExecuteGiveMeFPS(bool HairSimulationState, float CurveDensityValue, float HairMultiplierValue, float HairWidthValue, float iterationsValue, bool BreastPhysicsState, bool LowerPhysicsState, bool TonguePhysicsState, string shaderTypeValue, bool disablePixelLightsState, string antiAliasingValue, string textureSizeValue )
+        public void ExecuteGiveMeFPS(bool HairSimulationState, float CurveDensityValue, float HairMultiplierValue, float HairWidthValue, float iterationsValue, bool BreastPhysicsState, bool LowerPhysicsState, bool TonguePhysicsState, string shaderTypeValue, bool disablePixelLightsState, string antiAliasingValue, string textureSizeValue, bool hairOnly )
         {
             onToggleHairSimulationState.toggle.isOn = HairSimulationState;
-            onToggleBreastPhysicsState.toggle.isOn = BreastPhysicsState;
-            onToggleLowerPhysicsState.toggle.isOn = LowerPhysicsState;
-            onToggleTonguePhysicsState.toggle.isOn = TonguePhysicsState;
-            onToggledisablePixelLightState.toggle.isOn = disablePixelLightsState;
             iterationsSlider.slider.value = iterationsValue;
             HairMultiplierSlider.slider.value = HairMultiplierValue;
             CurveDensitySlider.slider.value = CurveDensityValue;
             HairWidthValueSlider.slider.value = HairWidthValue;
             shaderChooser.val = shaderTypeValue;
-            reflectionTextureSizeChooser.val = textureSizeValue;
+
+            if (!hairOnly) {
+                onToggleBreastPhysicsState.toggle.isOn = BreastPhysicsState;
+                onToggleLowerPhysicsState.toggle.isOn = LowerPhysicsState;
+                onToggleTonguePhysicsState.toggle.isOn = TonguePhysicsState;
+                onToggledisablePixelLightState.toggle.isOn = disablePixelLightsState;
+                reflectionTextureSizeChooser.val = textureSizeValue;
+            }
 
             foreach (Atom atom in SuperController.singleton.GetAtoms())
             {
@@ -514,18 +554,21 @@ namespace Redeyes{
                         }
                         //SuperController.LogMessage("test = " + hairControl);
                     }
-                    atom.GetStorableByID("BreastPhysicsMesh").GetBoolJSONParam("on").val=BreastPhysicsState;
-                    atom.GetStorableByID("LowerPhysicsMesh").GetBoolJSONParam("on").val=LowerPhysicsState;
-                    atom.GetStorableByID("TongueControl").GetBoolJSONParam("tongueCollision").val=TonguePhysicsState;
+                    if (!hairOnly) {
+                        atom.GetStorableByID("BreastPhysicsMesh").GetBoolJSONParam("on").val=BreastPhysicsState;
+                        atom.GetStorableByID("LowerPhysicsMesh").GetBoolJSONParam("on").val=LowerPhysicsState;
+                        atom.GetStorableByID("TongueControl").GetBoolJSONParam("tongueCollision").val=TonguePhysicsState;
+                    }
                 }
 
-                if (atom.GetStorableByID("MirrorRender"))
-                {
-                    atom.GetStorableByID("MirrorRender").GetBoolJSONParam("disablePixelLights").val=disablePixelLightsState;
-                    atom.GetStorableByID("MirrorRender").GetStringChooserJSONParam("antiAliasing").val = antiAliasingValue;
-                    atom.GetStorableByID("MirrorRender").GetStringChooserJSONParam("textureSize").val = textureSizeValue;
+                if (!hairOnly) {
+                    if (atom.GetStorableByID("MirrorRender"))
+                    {
+                        atom.GetStorableByID("MirrorRender").GetBoolJSONParam("disablePixelLights").val=disablePixelLightsState;
+                        atom.GetStorableByID("MirrorRender").GetStringChooserJSONParam("antiAliasing").val = antiAliasingValue;
+                        atom.GetStorableByID("MirrorRender").GetStringChooserJSONParam("textureSize").val = textureSizeValue;
+                    }
                 }
-                
             }
         }
 
@@ -613,10 +656,10 @@ namespace Redeyes{
                     {
                         ClothSimControl clothControl = clothGroup.GetComponentInChildren<ClothSimControl>();
                         clothControl.SetBoolParamValue("simEnabled", ClothSimState);
-                        SuperController.LogMessage("ClothSimState = " + clothControl.GetBoolParamValue("simEnabled"));
                     }
                 }
             }
+            SuperController.LogMessage("All Cloth Simulation = " + ClothSimState);
         }
 
         public void ToggleHairSimulationFPS(bool HairSimulationState)
