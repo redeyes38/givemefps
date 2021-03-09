@@ -6,7 +6,7 @@ using SimpleJSON;
 using System.Linq;
 
 /// <summary>
-/// Give Me FPS Version v3.3.1
+/// Give Me FPS Version v3.3.2
 /// By Redeyes
 /// Session plugin to quickly set ALL person options to give more frames per second at diffently levels to user requirements
 /// </summary>
@@ -122,15 +122,31 @@ namespace Redeyes{
                 //Quick buttons
                 btn = CreateButton("Give me some FPS - Recommend");
                 btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, false, false, "Quality", true, "1", "1024", false); });
+                JSONStorableAction GivemesomeFPSRecommendAction = new JSONStorableAction("Give me some FPS - Recommend", () => {
+                    ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, false, false, "Quality", true, "1", "1024", false);
+                });
+                RegisterAction(GivemesomeFPSRecommendAction);
 
                 btn = CreateButton("Give me some FPS - Hair Only");
                 btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, true, true, "Quality", false, "8", "1024", true); });
+                JSONStorableAction GivemesomeFPSHairOnlyAction = new JSONStorableAction("Give me some FPS - Hair Only", () => {
+                    ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, true, true, "Quality", false, "8", "1024", true);
+                });
+                RegisterAction(GivemesomeFPSHairOnlyAction);
 
                 btn = CreateButton("Give me ALL the FPS!");
                 btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Fast", true, "1", "512", false); });
+                JSONStorableAction GivemeALLtheFPSAction = new JSONStorableAction("Give me ALL the FPS!", () => {
+                    ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Fast", true, "1", "512", false);
+                });
+                RegisterAction(GivemeALLtheFPSAction);
 
-                btn = CreateButton("Atoms VAM Defaults");
+                btn = CreateButton("VAM Defaults");
                 btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 2, true, true, true, "Quality", false , "8", "1024", false); });
+                JSONStorableAction VAMDefaultsAction = new JSONStorableAction("VAM Defaults", () => {
+                    ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 2, true, true, true, "Quality", false , "8", "1024", false);
+                });
+                RegisterAction(VAMDefaultsAction);
 
                 //Override scene preferences
                 SetupInfoText(this,
@@ -264,7 +280,7 @@ namespace Redeyes{
                 physicsUpdateCapSlider.quickButtonsEnabled  = false;
 
                 SetupInfoText(this, 
-                    "<color=#606060><size=40><b>Give Me FPS v3.3.1</b></size>\nA Session Plugin.\n" +
+                    "<color=#606060><size=40><b>Give Me FPS v3.3.2</b></size>\nA Session Plugin.\n" +
                     //"These will set softbody physics for Tongue, breast & glute on/off to gain fps\n\n" +
                     "4 Quick buttons and cloth sim - with user fine tuning of the options the 4 buttons use + performance preferences for easy access</color>\n\n" +
                     "<b>Give me some FPS - Recommend:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
@@ -385,8 +401,8 @@ namespace Redeyes{
 
                 SetupInfoText(this,
                     "<color=#606060><size=40><b>Dynamic Adjust on load</b></size>\n" +
-                    "This will set glute softbody physics off when scene contains more than the number of persons selected</color>\n\n",
-                    205.0f, true
+                    "This will set glute softbody physics off & disable all advanced colliders when scene contains more than the number of persons selected</color>\n\n",
+                    237.0f, true
                 );
 
                 //DynamicAdjustState toggle
@@ -428,6 +444,7 @@ namespace Redeyes{
                     "If the name of the loaded look is the same as the current person, it won't apply the settings</color>\n\n",
                     480.0f, true
                 );
+
             }
             catch (Exception e)
             {
@@ -460,8 +477,10 @@ namespace Redeyes{
                     if (DynamicAdjustState.val) {
                         if (count > NumberDynamicPersonsValue.val) {
                             LowerPhysicsState.val=true;
+                            AdvancedCollidersState.val=true;
                         } else {
                             LowerPhysicsState.val=false;
+                            AdvancedCollidersState.val=false;
                         }
                     }
                     ToggleLowerPhysicsFPS(LowerPhysicsState.val);
