@@ -186,7 +186,7 @@ namespace Redeyes{
                 CreatePopup(msaaLevelchooser, false);
 
                 //pixelLightCount
-                pixelLightCountValue = new JSONStorableFloat("Pixel Light Count", UserPreferences.singleton.pixelLightCount, pixelLightCountCallback, 1f, 6, true);
+                pixelLightCountValue = new JSONStorableFloat("Pixel Light Count", UserPreferences.singleton.pixelLightCount, pixelLightCountCallback, 0f, 6, true);
                 RegisterFloat(pixelLightCountValue);
                 pixelLightCountSlider = CreateSlider(pixelLightCountValue, false);
                 pixelLightCountSlider.slider.wholeNumbers = true;
@@ -352,7 +352,7 @@ namespace Redeyes{
 
         public void pixelLightCountCallback(JSONStorableFloat pixelLightCountValue)
         {
-            if ( pixelLightCountValue.val >= 1f && pixelLightCountValue.val <= 3f)
+            if ( pixelLightCountValue.val >= 0f && pixelLightCountValue.val <= 6f)
             {
             UserPreferences.singleton.pixelLightCount = (int)pixelLightCountValue.val;
             }
@@ -360,7 +360,7 @@ namespace Redeyes{
 
         public void physicsUpdateCapCallback(JSONStorableFloat physicsUpdateCapValue)
         {
-            if ( physicsUpdateCapValue.val >= 0f && physicsUpdateCapValue.val <= 6f)
+            if ( physicsUpdateCapValue.val >= 1f && physicsUpdateCapValue.val <= 3f)
             {
             UserPreferences.singleton.physicsUpdateCap = (int)physicsUpdateCapValue.val;
             }
