@@ -6,7 +6,7 @@ using SimpleJSON;
 using System.Linq;
 
 /// <summary>
-/// Give Me FPS Version v3.3.2
+/// Give Me FPS Version v3.4.0
 /// By Redeyes
 /// Session plugin to quickly set ALL person options to give more frames per second at diffently levels to user requirements
 /// </summary>
@@ -79,6 +79,12 @@ namespace Redeyes{
         private JSONStorableBool mirrorReflectionsState;
         private UIDynamicToggle onTogglemirrorReflectionsState;
 
+        private JSONStorableBool realtimeReflectionProbesState;
+        private UIDynamicToggle onTogglerealtimeReflectionProbesState;
+
+        private JSONStorableBool physicsHighQualityState;
+        private UIDynamicToggle onTogglephysicsHighQualityState;
+
         private JSONStorableBool softPhysicsState;
         private UIDynamicToggle onTogglesoftPhysicsState;
 
@@ -94,6 +100,8 @@ namespace Redeyes{
         private JSONStorableStringChooser msaaLevelchooser_orginal;
         private JSONStorableFloat pixelLightCountValue_orginal;
         private JSONStorableBool mirrorReflectionsState_orginal;
+        private JSONStorableBool realtimeReflectionProbesState_orginal;
+        private JSONStorableBool physicsHighQualityState_orginal;        
         private JSONStorableFloat smoothPassesValue_orginal;
         private JSONStorableStringChooser ShaderLODChooser_orginal;
 
@@ -171,7 +179,29 @@ namespace Redeyes{
                 RegisterFloat(renderScaleValue);
                 renderScaleSlider = CreateSlider(renderScaleValue, false);
                 renderScaleSlider.rangeAdjustEnabled = false;
+                renderScaleSlider.autoSetQuickButtons = false;
+                renderScaleSlider.ConfigureQuickButtons(-0.01f, -0.05f, -0.10f, -0.25f, 0.01f, 0.05f, 0.10f, 0.25f);
                 //renderScaleSlider.quickButtonsEnabled  = false;
+
+                //Soft physics
+                softPhysicsState = new JSONStorableBool("Soft Body Physics", UserPreferences.singleton.softPhysics);
+                softPhysicsState_orginal = new JSONStorableBool("Soft Body Physics", UserPreferences.singleton.softPhysics);
+                RegisterBool(softPhysicsState);
+                onTogglesoftPhysicsState = CreateToggle(softPhysicsState, false);
+                onTogglesoftPhysicsState.toggle.onValueChanged.AddListener((on) =>
+                {
+                    TogglesoftPhysicsFPS(on);
+                });
+
+                //physicsHighQuality
+                physicsHighQualityState = new JSONStorableBool("High Quality Physics", UserPreferences.singleton.physicsHighQuality);
+                physicsHighQualityState_orginal = new JSONStorableBool("High Quality Physics", UserPreferences.singleton.physicsHighQuality);
+                RegisterBool(physicsHighQualityState);
+                onTogglephysicsHighQualityState = CreateToggle(physicsHighQualityState, false);
+                onTogglephysicsHighQualityState.toggle.onValueChanged.AddListener((on) =>
+                {
+                    TogglephysicsHighQualityFPS(on);
+                });
 
                 //mirrorReflections
                 mirrorReflectionsState = new JSONStorableBool("Mirror Reflection", UserPreferences.singleton.mirrorReflections);
@@ -183,14 +213,14 @@ namespace Redeyes{
                     TogglemirrorReflectionsFPS(on);
                 });
 
-                //Soft physics
-                softPhysicsState = new JSONStorableBool("Soft Body Physics", UserPreferences.singleton.softPhysics);
-                softPhysicsState_orginal = new JSONStorableBool("Soft Body Physics", UserPreferences.singleton.softPhysics);
-                RegisterBool(softPhysicsState);
-                onTogglesoftPhysicsState = CreateToggle(softPhysicsState, false);
-                onTogglesoftPhysicsState.toggle.onValueChanged.AddListener((on) =>
+                //realtimeReflectionProbes
+                realtimeReflectionProbesState = new JSONStorableBool("Realtime Reflection Probes", UserPreferences.singleton.realtimeReflectionProbes);
+                realtimeReflectionProbesState_orginal = new JSONStorableBool("Realtime Reflection Probes", UserPreferences.singleton.realtimeReflectionProbes);
+                RegisterBool(realtimeReflectionProbesState);
+                onTogglerealtimeReflectionProbesState = CreateToggle(realtimeReflectionProbesState, false);
+                onTogglerealtimeReflectionProbesState.toggle.onValueChanged.AddListener((on) =>
                 {
-                    TogglesoftPhysicsFPS(on);
+                    TogglerealtimeReflectionProbesFPS(on);
                 });
 
                 //SHADER
@@ -280,7 +310,7 @@ namespace Redeyes{
                 physicsUpdateCapSlider.quickButtonsEnabled  = false;
 
                 SetupInfoText(this, 
-                    "<color=#606060><size=40><b>Give Me FPS v3.3.2</b></size>\nA Session Plugin.\n" +
+                    "<color=#606060><size=40><b>Give Me FPS v3.4.0</b></size>\nA Session Plugin.\n" +
                     //"These will set softbody physics for Tongue, breast & glute on/off to gain fps\n\n" +
                     "4 Quick buttons and cloth sim - with user fine tuning of the options the 4 buttons use + performance preferences for easy access</color>\n\n" +
                     "<b>Give me some FPS - Recommend:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
@@ -371,12 +401,16 @@ namespace Redeyes{
                 HairMultiplierSlider = CreateSlider(HairMultiplierValue, true);
                 HairMultiplierSlider.slider.wholeNumbers = true;
                 HairMultiplierSlider.rangeAdjustEnabled = false;
+                HairMultiplierSlider.autoSetQuickButtons = false;
+                HairMultiplierSlider.ConfigureQuickButtons(-1.0f, -2.0f, -5.0f, -10.0f, 1.0f, 2.0f, 5.0f, 10.0f);
 
                 CurveDensityValue = new JSONStorableFloat("Curve Density", 16f, CurveDensityCallback, 2f, 64f, false);
                 RegisterFloat(CurveDensityValue);
                 CurveDensitySlider = CreateSlider(CurveDensityValue, true);
                 CurveDensitySlider.slider.wholeNumbers = true;
                 CurveDensitySlider.rangeAdjustEnabled = false;
+                CurveDensitySlider.autoSetQuickButtons = false;
+                CurveDensitySlider.ConfigureQuickButtons(-1.0f, -2.0f, -5.0f, -10.0f, 1.0f, 2.0f, 5.0f, 10.0f);
 
                 HairWidthValue = new JSONStorableFloat("Hair Width", 0.00045f, HairWidthValueCallback, 0.00000f, 0.00100f, false);
                 RegisterFloat(HairWidthValue);
@@ -590,6 +624,16 @@ namespace Redeyes{
         public void TogglemirrorReflectionsFPS(bool mirrorReflectionsState)
         {
             UserPreferences.singleton.mirrorReflections = mirrorReflectionsState;
+        }
+
+        public void TogglerealtimeReflectionProbesFPS(bool realtimeReflectionProbesState)
+        {
+            UserPreferences.singleton.realtimeReflectionProbes = realtimeReflectionProbesState;
+        }
+
+        public void TogglephysicsHighQualityFPS(bool physicsHighQualityState)
+        {
+            UserPreferences.singleton.physicsHighQuality = physicsHighQualityState;
         }
 
         public void TogglesoftPhysicsFPS(bool softPhysicsState)
