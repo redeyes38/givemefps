@@ -6,7 +6,7 @@ using SimpleJSON;
 using System.Linq;
 
 /// <summary>
-/// Give Me FPS Version v3.2.2
+/// Give Me FPS Version v3.2.3
 /// By Redeyes
 /// Session plugin to quickly set ALL person options to give more frames per second at diffently levels to user requirements
 /// </summary>
@@ -18,6 +18,8 @@ namespace Redeyes{
         private UIDynamicButton btn;
 
         private JSONStorableBool clothSimState;
+        private JSONStorableBool AdvancedCollidersState;
+        private JSONStorable geometry;
 
         private JSONStorableBool HairSimulationState;
         private UIDynamicToggle onToggleHairSimulationState;
@@ -83,6 +85,7 @@ namespace Redeyes{
         private List<string> physicsRateChoices = new List<string>();
 
         private JSONStorableBool clothSimState_orginal;
+        private JSONStorableBool AdvancedCollidersState_orginal;
         private JSONStorableBool softPhysicsState_orginal;
         private JSONStorableStringChooser msaaLevelchooser_orginal;
         private JSONStorableFloat pixelLightCountValue_orginal;
@@ -267,7 +270,7 @@ namespace Redeyes{
                 physicsUpdateCapSlider.quickButtonsEnabled  = false;
 
                 SetupInfoText(this, 
-                    "<color=#606060><size=40><b>Give Me FPS v3.2.2</b></size>\nA Session Plugin.\n" +
+                    "<color=#606060><size=40><b>Give Me FPS v3.2.3</b></size>\nA Session Plugin.\n" +
                     //"These will set softbody physics for Tongue, breast & glute on/off to gain fps\n\n" +
                     "4 Quick buttons and cloth sim - with user fine tuning of the options the 4 buttons use + performance preferences for easy access</color>\n\n" +
                     "<b>Give me some FPS - Recommend:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
@@ -324,7 +327,7 @@ namespace Redeyes{
                 RegisterStringChooser(shaderChooser);
                 CreatePopup(shaderChooser, true);
 
-                //Softbody physcis
+                //Softbody physics
                 BreastPhysicsState = new JSONStorableBool("Disable breast softbody Sim", false);
                 RegisterBool(BreastPhysicsState);
                 onToggleBreastPhysicsState = CreateToggle(BreastPhysicsState, true);
@@ -347,6 +350,16 @@ namespace Redeyes{
                 onToggleTonguePhysicsState.toggle.onValueChanged.AddListener((on) =>
                 {
                     ToggleTonguePhysicsFPS(on);
+                });
+
+                //AdvancedColliders toggle
+                AdvancedCollidersState = new JSONStorableBool("Disable All Advanced Colliders ", false);
+                AdvancedCollidersState_orginal = new JSONStorableBool("Disable All Advanced Colliders ", false);
+                RegisterBool(AdvancedCollidersState);
+                UIDynamicToggle onToggleAdvancedCollidersState = CreateToggle(AdvancedCollidersState, true);
+                onToggleAdvancedCollidersState.toggle.onValueChanged.AddListener((on) =>
+                {
+                    ToggleAdvancedCollidersFPS(on);
                 });
 
                 //reflection controls
@@ -774,6 +787,20 @@ namespace Redeyes{
                 if (atom.GetStorableByID("MirrorRender"))
                 {
                     atom.GetStorableByID("MirrorRender").GetBoolJSONParam("disablePixelLights").val=disablePixelLightsState;
+                }
+            }
+        }
+
+
+        public void ToggleAdvancedCollidersFPS(bool AdvancedCollidersState)
+        {
+            foreach (Atom atom in SuperController.singleton.GetAtoms())
+            {
+                if (atom.type == "Person")
+                {
+                    JSONStorable geometry = atom.GetStorableByID("geometry");
+                    DAZCharacterSelector character = geometry as DAZCharacterSelector;
+                    character.SetBoolParamValue("useAdvancedColliders", !AdvancedCollidersState);
                 }
             }
         }
