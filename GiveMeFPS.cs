@@ -26,13 +26,13 @@ namespace Redeyes{
                 RegisterBool(ClothSimState);
 
                 btn = CreateButton("Give me some FPS");
-                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, false, false, "Quality"); });
+                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, false, false, "Quality", true, "1", "1024"); });
 
                 btn = CreateButton("Give me ALL the FPS!");
-                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Fast"); });
+                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Fast", true, "1", "512"); });
 
                 btn = CreateButton("Default");
-                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 2, true, true, true, "Quality"); });
+                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 2, true, true, true, "Quality", false , "8", "1024"); });
 
                 UIDynamicToggle onToggle = CreateToggle(ClothSimState, false);
                 onToggle.toggle.onValueChanged.AddListener((on) =>
@@ -43,8 +43,8 @@ namespace Redeyes{
                 SetupInfoText(this, 
                     "<color=#606060><size=40><b>Give Me FPS v1.0</b></size>\nA Session Plugin.\n" +
                     "These will set softbody physics for Tongue, breast & glute on/off to gain fps</color>\n\n" +
-                    "<b>Give me some FPS:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader \n\n" +
-                    "<b>Give me ALL the FPS!:</b> In addition Turns off breast softbody physics, Hair sim off, Hair Curve Density 10 - Multiplier 2, Fast hair shader.\n\n" +
+                    "<b>Give me some FPS:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
+                    "<b>Give me ALL the FPS!:</b> In addition Turns off breast softbody physics, Hair sim off, Hair Curve Density 10 - Multiplier 2, Fast hair shader, reflections texture size 512.\n\n" +
                     "<b>Default:</b> Switch all settings back to VAM defaults (this isn't the same as the scene loaded with)\n\n" +
                     "<b>Toggle all clothes Sim Off/On:</b> Toggles all clothing simulation Off / On \n\n",
                     900.0f, true
@@ -57,7 +57,7 @@ namespace Redeyes{
         }
 
 
-        public void ExecuteGiveMeFPS(bool HairSimulationState, float CurveDensityValue, float HairMultiplierValue, float widthValue, float iterationsValue, bool BreastPhysicsState, bool LowerPhysicsState, bool TongueControlState, string shaderTypeValue)
+        public void ExecuteGiveMeFPS(bool HairSimulationState, float CurveDensityValue, float HairMultiplierValue, float widthValue, float iterationsValue, bool BreastPhysicsState, bool LowerPhysicsState, bool TongueControlState, string shaderTypeValue, bool disablePixelLightsState, string antiAliasingValue, string textureSizeValue )
         {
             foreach (Atom atom in SuperController.singleton.GetAtoms())
             {
@@ -80,6 +80,14 @@ namespace Redeyes{
                     atom.GetStorableByID("LowerPhysicsMesh").GetBoolJSONParam("on").val=LowerPhysicsState;
                     atom.GetStorableByID("TongueControl").GetBoolJSONParam("tongueCollision").val=TongueControlState;
                 }
+
+                if (atom.GetStorableByID("MirrorRender"))
+                {
+                    atom.GetStorableByID("MirrorRender").GetBoolJSONParam("disablePixelLights").val=disablePixelLightsState;
+                    atom.GetStorableByID("MirrorRender").GetStringChooserJSONParam("antiAliasing").val = antiAliasingValue;
+                    atom.GetStorableByID("MirrorRender").GetStringChooserJSONParam("textureSize").val = textureSizeValue;
+                }
+                
             }
         }
 
