@@ -6,7 +6,7 @@ using SimpleJSON;
 using System.Linq;
 
 /// <summary>
-/// Give Me FPS Version v3.1
+/// Give Me FPS Version v3.1.1
 /// By Redeyes
 /// Session plugin to quickly set ALL person options to give more frames per second at diffently levels to user requirements
 /// </summary>
@@ -112,7 +112,7 @@ namespace Redeyes{
                 btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 2, true, true, true, "Quality", false , "8", "1024", false); });
 
                 //cloth sim toggle
-                ClothSimState = new JSONStorableBool("All clothes Sim On/Off", true);
+                ClothSimState = new JSONStorableBool("Disable All cloth Sim ", false);
                 RegisterBool(ClothSimState);
                 UIDynamicToggle onToggleClothSimState = CreateToggle(ClothSimState, false);
                 onToggleClothSimState.toggle.onValueChanged.AddListener((on) =>
@@ -132,7 +132,7 @@ namespace Redeyes{
                 //renderScaleSlider.quickButtonsEnabled  = false;
 
                 //mirrorReflections
-                mirrorReflectionsState = new JSONStorableBool("Mirror Reflections On/Off", UserPreferences.singleton.mirrorReflections);
+                mirrorReflectionsState = new JSONStorableBool("Mirror Reflection", UserPreferences.singleton.mirrorReflections);
                 RegisterBool(mirrorReflectionsState);
                 onTogglemirrorReflectionsState = CreateToggle(mirrorReflectionsState, false);
                 onTogglemirrorReflectionsState.toggle.onValueChanged.AddListener((on) =>
@@ -141,7 +141,7 @@ namespace Redeyes{
                 });
 
                 //Soft physics
-                softPhysicsState = new JSONStorableBool("Soft Physics On/Off", UserPreferences.singleton.softPhysics);
+                softPhysicsState = new JSONStorableBool("Soft Body Physics", UserPreferences.singleton.softPhysics);
                 RegisterBool(softPhysicsState);
                 onTogglesoftPhysicsState = CreateToggle(softPhysicsState, false);
                 onTogglesoftPhysicsState.toggle.onValueChanged.AddListener((on) =>
@@ -232,7 +232,7 @@ namespace Redeyes{
                 physicsUpdateCapSlider.quickButtonsEnabled  = false;
 
                 SetupInfoText(this, 
-                    "<color=#606060><size=40><b>Give Me FPS v3.1</b></size>\nA Session Plugin.\n" +
+                    "<color=#606060><size=40><b>Give Me FPS v3.1.1</b></size>\nA Session Plugin.\n" +
                     //"These will set softbody physics for Tongue, breast & glute on/off to gain fps\n\n" +
                     "4 Quick buttons and cloth sim - with user fine tuning of the options the 4 buttons use + performance preferences for easy access</color>\n\n" +
                     "<b>Give me some FPS - Recommend:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
@@ -247,7 +247,7 @@ namespace Redeyes{
                 SetupInfoText(this, "<color=#606060><size=40><b>User Fine Tuning (Applies to all persons)</b></size></color>", 20.0f, true);
 
                 //Hair sim
-                HairSimulationState = new JSONStorableBool("All Hair Sim On/Off", true);
+                HairSimulationState = new JSONStorableBool("Disable all Hair Sim", false);
                 RegisterBool(HairSimulationState);
                 onToggleHairSimulationState = CreateToggle(HairSimulationState, true);
                 onToggleHairSimulationState.toggle.onValueChanged.AddListener((on) =>
@@ -290,7 +290,7 @@ namespace Redeyes{
                 CreatePopup(shaderChooser, true);
 
                 //Softbody physcis
-                BreastPhysicsState = new JSONStorableBool("Breast softbody Sim On/Off", true);
+                BreastPhysicsState = new JSONStorableBool("Disable breast softbody Sim", false);
                 RegisterBool(BreastPhysicsState);
                 onToggleBreastPhysicsState = CreateToggle(BreastPhysicsState, true);
                 onToggleBreastPhysicsState.toggle.onValueChanged.AddListener((on) =>
@@ -298,7 +298,7 @@ namespace Redeyes{
                     ToggleBreastPhysicsFPS(on);
                 });
 
-                LowerPhysicsState = new JSONStorableBool("Glute softbody Sim On/Off", true);
+                LowerPhysicsState = new JSONStorableBool("Disable Glute softbody Sim", false);
                 RegisterBool(LowerPhysicsState);
                 onToggleLowerPhysicsState = CreateToggle(LowerPhysicsState, true);
                 onToggleLowerPhysicsState.toggle.onValueChanged.AddListener((on) =>
@@ -306,7 +306,7 @@ namespace Redeyes{
                     ToggleLowerPhysicsFPS(on);
                 });
 
-                TonguePhysicsState = new JSONStorableBool("Tongue softbody Sim On/Off", true);
+                TonguePhysicsState = new JSONStorableBool("Disable Tongue softbody Sim", false);
                 RegisterBool(TonguePhysicsState);
                 onToggleTonguePhysicsState = CreateToggle(TonguePhysicsState, true);
                 onToggleTonguePhysicsState.toggle.onValueChanged.AddListener((on) =>
@@ -315,7 +315,7 @@ namespace Redeyes{
                 });
 
                 //reflection controls
-                disablePixelLightsState = new JSONStorableBool("Reflection disable pixel shader On/Off", false);
+                disablePixelLightsState = new JSONStorableBool("Disable Reflection pixel shader", false);
                 RegisterBool(disablePixelLightsState);
                 onToggledisablePixelLightState = CreateToggle(disablePixelLightsState, true);
                 onToggledisablePixelLightState.toggle.onValueChanged.AddListener((on) =>
@@ -342,7 +342,7 @@ namespace Redeyes{
                 btn = CreateButton("CPU Bench", true);
                 btn.button.onClick.AddListener(() => { CPUbench(); });
 
-                btn = CreateButton("No Soft Body physics (CPU KILLER)", true);
+                btn = CreateButton("CPU Bench - Soft Body physics off", true);
                 btn.button.onClick.AddListener(() => { CPUbenchNoSoftPhysics(); });
 
             }
@@ -355,7 +355,8 @@ namespace Redeyes{
         //CPU Bench
         public void CPUbench()
         {
-           softPhysicsState.val = true;
+            ClothSimState.val = true;
+            softPhysicsState.val = true;
             msaaLevelchooser.val = "Off";
             pixelLightCountValue.val = 0;
             mirrorReflectionsState.val = false;
@@ -367,6 +368,7 @@ namespace Redeyes{
         //CPU Bench
         public void CPUbenchNoSoftPhysics()
         {
+            ClothSimState.val = true;
             softPhysicsState.val = false;
             msaaLevelchooser.val = "Off";
             pixelLightCountValue.val = 0;
@@ -606,7 +608,7 @@ namespace Redeyes{
             {
                 if (atom.type == "Person")
                 {
-                    atom.GetStorableByID("BreastPhysicsMesh").GetBoolJSONParam("on").val=BreastPhysicsState;
+                    atom.GetStorableByID("BreastPhysicsMesh").GetBoolJSONParam("on").val=!BreastPhysicsState;
 
                 }
             }
@@ -617,7 +619,7 @@ namespace Redeyes{
             {
                 if (atom.type == "Person")
                 {
-                    atom.GetStorableByID("LowerPhysicsMesh").GetBoolJSONParam("on").val=LowerPhysicsState;
+                    atom.GetStorableByID("LowerPhysicsMesh").GetBoolJSONParam("on").val=!LowerPhysicsState;
 
                 }
             }
@@ -628,7 +630,7 @@ namespace Redeyes{
             {
                 if (atom.type == "Person")
                 {
-                    atom.GetStorableByID("TongueControl").GetBoolJSONParam("tongueCollision").val=TonguePhysicsState;
+                    atom.GetStorableByID("TongueControl").GetBoolJSONParam("tongueCollision").val=!TonguePhysicsState;
 
                 }
             }
@@ -655,11 +657,11 @@ namespace Redeyes{
                     foreach (DAZClothingItem clothGroup in atom.GetComponentsInChildren<DAZClothingItem>())
                     {
                         ClothSimControl clothControl = clothGroup.GetComponentInChildren<ClothSimControl>();
-                        clothControl.SetBoolParamValue("simEnabled", ClothSimState);
+                        clothControl.SetBoolParamValue("simEnabled", !ClothSimState);
                     }
                 }
             }
-            SuperController.LogMessage("All Cloth Simulation = " + ClothSimState);
+            SuperController.LogMessage("All Cloth Sim = " + !ClothSimState);
         }
 
         public void ToggleHairSimulationFPS(bool HairSimulationState)
@@ -672,11 +674,12 @@ namespace Redeyes{
                     {
                         HairSimControl hairControl = hairGroup.GetComponentInChildren<HairSimControl>();
                         if (hairControl!=null) {
-                            hairControl.SetBoolParamValue("simulationEnabled", HairSimulationState);
+                            hairControl.SetBoolParamValue("simulationEnabled", !HairSimulationState);
                         }
                     }
                 }
             }
+            SuperController.LogMessage("All Hair Sim = " + !HairSimulationState);
         }
 
         protected void HairMultiplierCallback(JSONStorableFloat HairMultiplierValue)
