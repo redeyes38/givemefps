@@ -25,8 +25,11 @@ namespace Redeyes{
                 ClothSimState = new JSONStorableBool("Toggle all clothes Sim Off/On", false);
                 RegisterBool(ClothSimState);
 
-                btn = CreateButton("Give me some FPS");
+                btn = CreateButton("Give me some FPS - Recommend");
                 btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, false, false, "Quality", true, "1", "1024"); });
+
+                btn = CreateButton("Give me some FPS - Hair Only");
+                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, true, true, "Quality", false, "8", "1024"); });
 
                 btn = CreateButton("Give me ALL the FPS!");
                 btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Fast", true, "1", "512"); });
@@ -43,11 +46,12 @@ namespace Redeyes{
                 SetupInfoText(this, 
                     "<color=#606060><size=40><b>Give Me FPS v1.0</b></size>\nA Session Plugin.\n" +
                     "These will set softbody physics for Tongue, breast & glute on/off to gain fps</color>\n\n" +
-                    "<b>Give me some FPS:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
+                    "<b>Give me some FPS - Recommend:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
+                    "<b>Give me some FPS - Hair Only:</b> Same as recommend but only hair parameters adjusted\n\n" +
                     "<b>Give me ALL the FPS!:</b> In addition Turns off breast softbody physics, Hair sim off, Hair Curve Density 10 - Multiplier 2, Fast hair shader, reflections texture size 512.\n\n" +
                     "<b>Default:</b> Switch all settings back to VAM defaults (this isn't the same as the scene loaded with)\n\n" +
                     "<b>Toggle all clothes Sim Off/On:</b> Toggles all clothing simulation Off / On \n\n",
-                    900.0f, true
+                    1100.0f, true
                 );
             }
             catch (Exception e)
