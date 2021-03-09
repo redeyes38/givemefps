@@ -27,27 +27,31 @@ namespace Redeyes{
         private JSONStorableFloat HairWidthValue;
         private JSONStorableFloat iterationsValue;
 
-        protected JSONStorableStringChooser shaderChooser;
-        protected JSONStorableStringChooser reflectionTextureSizeChooser;
+        private UIDynamicToggle onToggleHairSimulationState;
+        private UIDynamicToggle onToggleBreastPhysicsState;
+        private UIDynamicToggle onToggleLowerPhysicsState;
+        private UIDynamicToggle onToggleTonguePhysicsState;
+        private UIDynamicToggle onToggledisablePixelLightState;
 
-        protected UIDynamicSlider dslider;
+        private JSONStorableStringChooser shaderChooser;
+        private JSONStorableStringChooser reflectionTextureSizeChooser;
+
+        private UIDynamicSlider iterationsSlider;
+        private UIDynamicSlider HairMultiplierSlider;
+        private UIDynamicSlider CurveDensitySlider;
+        private UIDynamicSlider HairWidthValueSlider;
+        
+        private List<string> shaderChoices = new List<string>();
+        private List<string> reflectionTextureChoices = new List<string>();
+
         private bool _dirty;
         public override void Init()
         {
             try
             {
 
-                SetupInfoText(this, 
-                    "<color=#606060><size=40><b>Give Me FPS v1.0</b></size>\nA Session Plugin.\n" +
-                    "These will set softbody physics for Tongue, breast & glute on/off to gain fps\n\n" +
-                    "4 Quick buttons and cloth sim - with user fine tuning of the options the 4 buttons use</color>\n\n" +
-                    "<b>Give me some FPS - Recommend:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
-                    "<b>Give me some FPS - Hair Only:</b> Hair same as recommend but all other options VAM default\n\n" +
-                    "<b>Give me ALL the FPS!:</b> In addition to recommended - Turns off breast softbody physics, Hair sim off, Hair Curve Density 10 - Multiplier 2, reflections texture size 512.\n\n" +
-                    "<b>Default:</b> Switch all settings back to VAM defaults (this isn't the same as the scene loaded with)\n\n" +
-                    "<b>Toggle all clothes Sim Off/On:</b> Toggles all clothing simulation Off / On \n\n",
-                    2100.0f, true
-                );
+                //start if user fine tuning
+                SetupInfoText(this, "<color=#606060><size=40><b>Quick Buttons</b></size></color>", 20.0f, false);
 
                 //Quick buttons
                 btn = CreateButton("Give me some FPS - Recommend");
@@ -57,7 +61,7 @@ namespace Redeyes{
                 btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, true, true, "Quality", false, "8", "1024"); });
 
                 btn = CreateButton("Give me ALL the FPS!");
-                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Quality", true, "1", "512"); });
+                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Fast", true, "1", "512"); });
 
                 btn = CreateButton("VAM Default");
                 btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 2, true, true, true, "Quality", false , "8", "1024"); });
@@ -71,13 +75,25 @@ namespace Redeyes{
                     ToggleSimClothFPS(on);
                 });
 
+                SetupInfoText(this, 
+                    "<color=#606060><size=40><b>Give Me FPS v2.3</b></size>\nA Session Plugin.\n" +
+                    "These will set softbody physics for Tongue, breast & glute on/off to gain fps\n\n" +
+                    "4 Quick buttons and cloth sim - with user fine tuning of the options the 4 buttons use</color>\n\n" +
+                    "<b>Give me some FPS - Recommend:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
+                    "<b>Give me some FPS - Hair Only:</b> Hair same as recommend but all other options VAM default\n\n" +
+                    "<b>Give me ALL the FPS!:</b> In addition to recommended - Turns off breast softbody physics, Hair sim off, Hair Curve Density 10 - Multiplier 2, reflections texture size 512.\n\n" +
+                    "<b>Default:</b> Switch all settings back to VAM defaults (this isn't the same as the scene loaded with)\n\n" +
+                    "<b>Toggle all clothes Sim Off/On:</b> Toggles all clothing simulation Off / On \n\n",
+                    2100.0f, false
+                );
+
                 //start if user fine tuning
-                SetupInfoText(this, "<color=#606060><size=40><b>User Fine Tuning</b></size></color>", 20.0f, false);
+                SetupInfoText(this, "<color=#606060><size=40><b>User Fine Tuning</b></size></color>", 20.0f, true);
 
                 //Hair sim
                 HairSimulationState = new JSONStorableBool("All Hair Sim Off/On", true);
                 RegisterBool(HairSimulationState);
-                UIDynamicToggle onToggleHairSimulationState = CreateToggle(HairSimulationState, false);
+                onToggleHairSimulationState = CreateToggle(HairSimulationState, true);
                 onToggleHairSimulationState.toggle.onValueChanged.AddListener((on) =>
                 {
                     ToggleHairSimulationFPS(on);
@@ -86,45 +102,41 @@ namespace Redeyes{
                 //hair sliders, sim iterations & shader control
                 HairMultiplierValue = new JSONStorableFloat("Hair Multiplier", 3f, HairMultiplierCallback, 1f, 64f, false);
                 RegisterFloat(HairMultiplierValue);
-                dslider = CreateSlider(HairMultiplierValue, false);
-                dslider.slider.wholeNumbers = true;
-                dslider.rangeAdjustEnabled = false;
-                dslider.quickButtonsEnabled  = false;
+                HairMultiplierSlider = CreateSlider(HairMultiplierValue, true);
+                HairMultiplierSlider.slider.wholeNumbers = true;
+                HairMultiplierSlider.rangeAdjustEnabled = false;
 
                 CurveDensityValue = new JSONStorableFloat("Curve Density", 16f, CurveDensityCallback, 2f, 64f, false);
                 RegisterFloat(CurveDensityValue);
-                dslider = CreateSlider(CurveDensityValue, false);
-                dslider.slider.wholeNumbers = true;
-                dslider.rangeAdjustEnabled = false;
-                dslider.quickButtonsEnabled  = false;
+                CurveDensitySlider = CreateSlider(CurveDensityValue, true);
+                CurveDensitySlider.slider.wholeNumbers = true;
+                CurveDensitySlider.rangeAdjustEnabled = false;
 
                 HairWidthValue = new JSONStorableFloat("Hair Width", 0.00045f, HairWidthValueCallback, 0.00000f, 0.00100f, false);
                 RegisterFloat(HairWidthValue);
-                dslider = CreateSlider(HairWidthValue, false);
-                dslider.quickButtonsEnabled  = false;
-                dslider.rangeAdjustEnabled = false;
-                dslider.valueFormat = "F5";
+                HairWidthValueSlider = CreateSlider(HairWidthValue, true);
+                HairWidthValueSlider.rangeAdjustEnabled = false;
+                HairWidthValueSlider.valueFormat = "F5";
 
                 iterationsValue = new JSONStorableFloat("Sim iterations", 1f, iterationsCallback, 1f, 5f, false);
                 RegisterFloat(iterationsValue);
-                dslider = CreateSlider(iterationsValue, false);
-                dslider.slider.wholeNumbers = true;
-                dslider.rangeAdjustEnabled = false;
-                dslider.quickButtonsEnabled  = false;
+                iterationsSlider = CreateSlider(iterationsValue, true);
+                iterationsSlider.slider.wholeNumbers = true;
+                iterationsSlider.rangeAdjustEnabled = false;
+                iterationsSlider.quickButtonsEnabled  = false;
 
-                List<string> shaderChoices = new List<string>();
                 shaderChoices.Add("Fast");
                 shaderChoices.Add("Quality");
                 shaderChoices.Add("QualityThicken");
                 shaderChoices.Add("QualityThickenMore");
                 shaderChooser = new JSONStorableStringChooser("Hair shader", shaderChoices, "Quality", "Hair shader", doShaderChoice);
                 RegisterStringChooser(shaderChooser);
-                CreatePopup(shaderChooser, false);
+                CreatePopup(shaderChooser, true);
 
                 //Softbody physcis
                 BreastPhysicsState = new JSONStorableBool("Breast softbody Sim Off/On", true);
                 RegisterBool(BreastPhysicsState);
-                UIDynamicToggle onToggleBreastPhysicsState = CreateToggle(BreastPhysicsState, false);
+                onToggleBreastPhysicsState = CreateToggle(BreastPhysicsState, true);
                 onToggleBreastPhysicsState.toggle.onValueChanged.AddListener((on) =>
                 {
                     ToggleBreastPhysicsFPS(on);
@@ -132,7 +144,7 @@ namespace Redeyes{
 
                 LowerPhysicsState = new JSONStorableBool("Glute softbody Sim Off/On", true);
                 RegisterBool(LowerPhysicsState);
-                UIDynamicToggle onToggleLowerPhysicsState = CreateToggle(LowerPhysicsState, false);
+                onToggleLowerPhysicsState = CreateToggle(LowerPhysicsState, true);
                 onToggleLowerPhysicsState.toggle.onValueChanged.AddListener((on) =>
                 {
                     ToggleLowerPhysicsFPS(on);
@@ -140,7 +152,7 @@ namespace Redeyes{
 
                 TonguePhysicsState = new JSONStorableBool("Tongue softbody Sim Off/On", true);
                 RegisterBool(TonguePhysicsState);
-                UIDynamicToggle onToggleTonguePhysicsState = CreateToggle(TonguePhysicsState, false);
+                onToggleTonguePhysicsState = CreateToggle(TonguePhysicsState, true);
                 onToggleTonguePhysicsState.toggle.onValueChanged.AddListener((on) =>
                 {
                     ToggleTonguePhysicsFPS(on);
@@ -149,20 +161,19 @@ namespace Redeyes{
                 //reflection controls
                 disablePixelLightsState = new JSONStorableBool("Reflection disable pixel shader Off/On", false);
                 RegisterBool(disablePixelLightsState);
-                UIDynamicToggle onToggledisablePixelLightState = CreateToggle(disablePixelLightsState, false);
+                onToggledisablePixelLightState = CreateToggle(disablePixelLightsState, true);
                 onToggledisablePixelLightState.toggle.onValueChanged.AddListener((on) =>
                 {
                     onToggledisablePixelLightStateFPS(on);
                 });
 
-                List<string> reflectionTextureChoices = new List<string>();
                 reflectionTextureChoices.Add("512");
                 reflectionTextureChoices.Add("1024");
                 reflectionTextureChoices.Add("2048");
                 reflectionTextureChoices.Add("4096");
                 reflectionTextureSizeChooser = new JSONStorableStringChooser("Reflection Texture Size", reflectionTextureChoices, "1024", "Reflection Texture Size", doReflectionTextureChoice);
                 RegisterStringChooser(reflectionTextureSizeChooser);
-                CreatePopup(reflectionTextureSizeChooser, false);
+                CreatePopup(reflectionTextureSizeChooser, true);
 
             }
             catch (Exception e)
@@ -174,6 +185,19 @@ namespace Redeyes{
 
         public void ExecuteGiveMeFPS(bool HairSimulationState, float CurveDensityValue, float HairMultiplierValue, float HairWidthValue, float iterationsValue, bool BreastPhysicsState, bool LowerPhysicsState, bool TonguePhysicsState, string shaderTypeValue, bool disablePixelLightsState, string antiAliasingValue, string textureSizeValue )
         {
+            //ToggleHairSimulationFPS(HairSimulationState);
+            onToggleHairSimulationState.toggle.isOn = HairSimulationState;
+            onToggleBreastPhysicsState.toggle.isOn = BreastPhysicsState;
+            onToggleLowerPhysicsState.toggle.isOn = LowerPhysicsState;
+            onToggleTonguePhysicsState.toggle.isOn = TonguePhysicsState;
+            onToggledisablePixelLightState.toggle.isOn = disablePixelLightsState;
+            iterationsSlider.slider.value = iterationsValue;
+            HairMultiplierSlider.slider.value = HairMultiplierValue;
+            CurveDensitySlider.slider.value = CurveDensityValue;
+            HairWidthValueSlider.slider.value = HairWidthValue;
+            shaderChooser.val = shaderTypeValue;
+            reflectionTextureSizeChooser.val = textureSizeValue;
+
             foreach (Atom atom in SuperController.singleton.GetAtoms())
             {
                 if (atom.type == "Person")
