@@ -6,7 +6,7 @@ using SimpleJSON;
 using System.Linq;
 
 /// <summary>
-/// Give Me FPS Version v3.4.1
+/// Give Me FPS Version v3.5.2
 /// By Redeyes
 /// Session plugin to quickly set ALL person options to give more frames per second at diffently levels to user requirements
 /// </summary>
@@ -49,8 +49,20 @@ namespace Redeyes{
         private JSONStorableFloat HairWidthValue;
         private UIDynamicSlider HairWidthValueSlider;
 
-        private JSONStorableFloat iterationsValue;
-        private UIDynamicSlider iterationsSlider;
+        private JSONStorableFloat HairWeightValue;
+        private UIDynamicSlider HairWeightValueSlider;
+
+        private JSONStorableFloat HairIterationsValue;
+        private UIDynamicSlider HairIterationsSlider;
+
+        private JSONStorableFloat ClothStiffnessValue;
+        private UIDynamicSlider ClothStiffnessValueSlider;
+
+        private JSONStorableFloat ClothWeightValue;
+        private UIDynamicSlider ClothWeightValueSlider;
+
+        private JSONStorableFloat ClothIterationsValue;
+        private UIDynamicSlider ClothIterationsValueSlider;
 
         private JSONStorableStringChooser shaderChooser;
         private List<string> shaderChoices = new List<string>();
@@ -106,15 +118,20 @@ namespace Redeyes{
         private JSONStorableStringChooser ShaderLODChooser_orginal;
 
         private JSONStorableBool overrideScenePreferencesState;
+        private JSONStorableBool overrideClothParametersState;
 
         private string msaa_popup;
+        private string atom_name = "";
         private float count=0;
+        private float cloth_ready_count=0;
         private bool first_time_bench = true;
+        private bool _ready = false;
+        private bool cloth_ready = false;
+        private bool hair_ready = false;
 
         public override void Init()
         {
-            try
-            {
+            try {
                 SuperController.singleton.onSceneLoadedHandlers += OnSceneLoaded;
                 SuperController.singleton.onAtomUIDsChangedHandlers += OnAtomUIDsChanged;
                 
@@ -129,30 +146,30 @@ namespace Redeyes{
                 
                 //Quick buttons
                 btn = CreateButton("Give me some FPS - Recommend");
-                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, false, false, "Quality", true, "1", "1024", false); });
+                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, 1, 0.5F, 1.0F, 1,true, false, false, "Quality", true, "1", "1024", false); });
                 JSONStorableAction GivemesomeFPSRecommendAction = new JSONStorableAction("Give me some FPS - Recommend", () => {
-                    ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, false, false, "Quality", true, "1", "1024", false);
+                    ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, 1, 0.5F, 1.0F, 1, true, false, false, "Quality", true, "1", "1024", false);
                 });
                 RegisterAction(GivemesomeFPSRecommendAction);
 
                 btn = CreateButton("Give me some FPS - Hair Only");
-                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, true, true, "Quality", false, "8", "1024", true); });
+                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, 1, 0.5F, 1.0F, 1, true, true, true, "Quality", false, "8", "1024", true); });
                 JSONStorableAction GivemesomeFPSHairOnlyAction = new JSONStorableAction("Give me some FPS - Hair Only", () => {
-                    ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, true, true, true, "Quality", false, "8", "1024", true);
+                    ExecuteGiveMeFPS(true, 16, 3, 0.00045000f, 1, 1, 0.5F, 1.0F, 1, true, true, true, "Quality", false, "8", "1024", true);
                 });
                 RegisterAction(GivemesomeFPSHairOnlyAction);
 
                 btn = CreateButton("Give me ALL the FPS!");
-                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Fast", true, "1", "512", false); });
+                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, 1, 0.5F, 1.0F, 1, false, false, false, "Fast", true, "1", "512", false); });
                 JSONStorableAction GivemeALLtheFPSAction = new JSONStorableAction("Give me ALL the FPS!", () => {
-                    ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Fast", true, "1", "512", false);
+                    ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, 1, 0.5F, 1.0F, 1, false, false, false, "Fast", true, "1", "512", false);
                 });
                 RegisterAction(GivemeALLtheFPSAction);
 
                 btn = CreateButton("VAM Defaults");
-                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 2, true, true, true, "Quality", false , "8", "1024", false); });
+                btn.button.onClick.AddListener(() => { ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 1.5f, 2, 0.5F, 1.0F, 1, true, true, true, "Quality", false , "8", "1024", false); });
                 JSONStorableAction VAMDefaultsAction = new JSONStorableAction("VAM Defaults", () => {
-                    ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 2, true, true, true, "Quality", false , "8", "1024", false);
+                    ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 1.5f, 2, 0.5F, 1.0F, 1, true, true, true, "Quality", false , "8", "1024", false);
                 });
                 RegisterAction(VAMDefaultsAction);
 
@@ -167,9 +184,7 @@ namespace Redeyes{
                 RegisterBool(overrideScenePreferencesState);
                 UIDynamicToggle onToggleoverrideScenePreferencesState = CreateToggle(overrideScenePreferencesState, false);
                 onToggleoverrideScenePreferencesState.toggle.onValueChanged.AddListener((on) =>
-                {
-                    SuperController.LogMessage("Override Scene Preferences on load = " + on);
-                });
+                {});
 
                 //Preferences - Performance
                 SetupInfoText(this, "<color=#606060><size=40><b>Performance Preferences</b></size></color>", 20.0f, false);
@@ -309,30 +324,8 @@ namespace Redeyes{
                 physicsUpdateCapSlider.rangeAdjustEnabled = false;
                 physicsUpdateCapSlider.quickButtonsEnabled  = false;
 
-                SetupInfoText(this, 
-                    "<color=#606060><size=40><b>Give Me FPS v3.4.1</b></size>\nA Session Plugin.\n" +
-                    //"These will set softbody physics for Tongue, breast & glute on/off to gain fps\n\n" +
-                    "4 Quick buttons and cloth sim - with user fine tuning of the options the 4 buttons use + performance preferences for easy access</color>\n\n" +
-                    "<b>Give me some FPS - Recommend:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
-                    "<b>Give me some FPS - Hair Only:</b> Hair same as recommend but all other options VAM default\n\n" +
-                    "<b>Give me ALL the FPS!:</b> In addition to recommended - Turns off breast softbody physics, Hair sim off, Hair Curve Density 10 - Multiplier 2, reflections texture size 512.\n\n" +
-                    "<b>Default:</b> Switch all settings back to VAM defaults (this isn't the same as the scene loaded with)\n\n" +
-                    "<b>Toggle all clothes Sim On/Off:</b> Toggles all clothing simulation Off / On \n\n",
-                    1100.0f, false
-                );
-
                 //start if user fine tuning
-                SetupInfoText(this, "<color=#606060><size=40><b>Atom Settings (Applies to all persons)</b></size></color>", 20.0f, true);
-
-                //cloth sim toggle
-                clothSimState = new JSONStorableBool("Disable all cloth Sim ", false);
-                clothSimState_orginal = new JSONStorableBool("Disable all cloth Sim ", false);
-                RegisterBool(clothSimState);
-                UIDynamicToggle onToggleClothSimState = CreateToggle(clothSimState, true);
-                onToggleClothSimState.toggle.onValueChanged.AddListener((on) =>
-                {
-                    ToggleSimClothFPS(on);
-                });
+                SetupInfoText(this, "<color=#606060><size=40><b>All Person Settings</b></size></color>", 20.0f, true);
 
                 //Softbody physics
                 BreastPhysicsState = new JSONStorableBool("Disable Breast softbody Sim", false);
@@ -418,12 +411,18 @@ namespace Redeyes{
                 HairWidthValueSlider.rangeAdjustEnabled = false;
                 HairWidthValueSlider.valueFormat = "F5";
 
-                iterationsValue = new JSONStorableFloat("Sim iterations", 1f, iterationsCallback, 1f, 5f, false);
-                RegisterFloat(iterationsValue);
-                iterationsSlider = CreateSlider(iterationsValue, true);
-                iterationsSlider.slider.wholeNumbers = true;
-                iterationsSlider.rangeAdjustEnabled = false;
-                iterationsSlider.quickButtonsEnabled  = false;
+                HairWeightValue = new JSONStorableFloat("Hair Weight", 1.0f, HairWeightValueCallback, 0.00000f, 2.0f, false);
+                RegisterFloat(HairWeightValue);
+                HairWeightValueSlider = CreateSlider(HairWeightValue, true);
+                HairWeightValueSlider.rangeAdjustEnabled = false;
+                HairWeightValueSlider.valueFormat = "F5";
+
+                HairIterationsValue = new JSONStorableFloat("Sim iterations", 1f, HairIterationsCallback, 1f, 5f, false);
+                RegisterFloat(HairIterationsValue);
+                HairIterationsSlider = CreateSlider(HairIterationsValue, true);
+                HairIterationsSlider.slider.wholeNumbers = true;
+                HairIterationsSlider.rangeAdjustEnabled = false;
+                HairIterationsSlider.quickButtonsEnabled  = false;
 
                 shaderChoices.Add("Fast");
                 shaderChoices.Add("Quality");
@@ -432,6 +431,41 @@ namespace Redeyes{
                 shaderChooser = new JSONStorableStringChooser("Hair shader", shaderChoices, "Quality", "Hair shader", doShaderChoice);
                 RegisterStringChooser(shaderChooser);
                 CreatePopup(shaderChooser, true);
+
+                //cloth sim toggle
+                clothSimState = new JSONStorableBool("Disable all cloth Sim ", false);
+                clothSimState_orginal = new JSONStorableBool("Disable all cloth Sim ", false);
+                RegisterBool(clothSimState);
+                UIDynamicToggle onToggleClothSimState = CreateToggle(clothSimState, true);
+                onToggleClothSimState.toggle.onValueChanged.AddListener((on) =>
+                {
+                    ToggleSimClothFPS(on);
+                });
+
+                overrideClothParametersState = new JSONStorableBool("Enable Cloth override on load", false);
+                RegisterBool(overrideClothParametersState);
+                UIDynamicToggle onToggleoverrideClothParametersState = CreateToggle(overrideClothParametersState, true);
+                onToggleoverrideClothParametersState.toggle.onValueChanged.AddListener((on) =>
+                {});
+
+                ClothStiffnessValue = new JSONStorableFloat("Cloth Stiffness", 1.0f, ClothStiffnessValueCallback, 0.00000f, 1.0f, false);
+                RegisterFloat(ClothStiffnessValue);
+                ClothStiffnessValueSlider = CreateSlider(ClothStiffnessValue, true);
+                ClothStiffnessValueSlider.rangeAdjustEnabled = false;
+                ClothStiffnessValueSlider.valueFormat = "F3";
+
+                ClothWeightValue = new JSONStorableFloat("Cloth Weight", 0.5f, ClothWeightValueCallback, 0.00000f, 2.0f, false);
+                RegisterFloat(ClothWeightValue);
+                ClothWeightValueSlider = CreateSlider(ClothWeightValue, true);
+                ClothWeightValueSlider.rangeAdjustEnabled = false;
+                ClothWeightValueSlider.valueFormat = "F3";
+
+                ClothIterationsValue = new JSONStorableFloat("Cloth Sim iterations", 1f, ClothIterationsValueCallback, 1f, 7f, false);
+                RegisterFloat(ClothIterationsValue);
+                ClothIterationsValueSlider = CreateSlider(ClothIterationsValue, true);
+                ClothIterationsValueSlider.slider.wholeNumbers = true;
+                ClothIterationsValueSlider.rangeAdjustEnabled = false;
+                ClothIterationsValueSlider.quickButtonsEnabled  = false;
 
                 SetupInfoText(this,
                     "<color=#606060><size=40><b>Dynamic Adjust on load</b></size>\n" +
@@ -459,25 +493,35 @@ namespace Redeyes{
                     "<color=#606060><size=40><b>CPU Bench FPS</b></size>\n" +
                     "WARNING - These buttons will adjust performance parameters to reduce as much load on the GPU as possible - this should show how many FPS a good GPU should be able to give - suggest use 2 or more persons in a scene to test\n\n" +
                     "The real killer of CPU you'll find is the softbody physics - this is why I recommend switching of tongue and glute softbody physics as the best compromise</color>\n\n",
-                    530.0f, true
+                    530.0f, false
                 );
 
-                btn = CreateButton("CPU Bench - Soft Body physics On", true);
+                btn = CreateButton("CPU Bench - Soft Body physics On", false);
                 btn.button.onClick.AddListener(() => { CPUbench(); });
 
-                btn = CreateButton("CPU Bench - Soft Body physics Off", true);
+                btn = CreateButton("CPU Bench - Soft Body physics Off", false);
                 btn.button.onClick.AddListener(() => { CPUbenchNoSoftPhysics(); });
 
-                btn = CreateButton("Restore Performance Parameters", true);
+                btn = CreateButton("Restore Performance Parameters", false);
                 btn.button.onClick.AddListener(() => { restore_vam_performance_parameters(); });
 
-                SetupInfoText(this,
-                    "<color=#606060><size=40><b>Adjust Person On Load Look</b></size>\n" +
+                SetupInfoText(this, 
+                    "<color=#606060><size=40><b>Give Me FPS v3.5.2</b></size>\nA Session Plugin.\n" +
+                    //"These will set softbody physics for Tongue, breast & glute on/off to gain fps\n\n" +
+                    "4 Quick buttons and cloth sim - with user fine tuning of the options the 4 buttons use + performance preferences for easy access</color>\n\n" +
+                    "<b>Give me some FPS - Recommend:</b> Turns off Tongue & Glute softbody physics, breasts on, Hair Curve Density 16 - Multiplier 3 - strand width 0.00045 - iterations 1, Quality hair shader, disable pixel lights reflections and anti aliasing 1\n\n" +
+                    "<b>Give me some FPS - Hair Only:</b> Hair same as recommend but all other options VAM default\n\n" +
+                    "<b>Give me ALL the FPS!:</b> In addition to recommended - Turns off breast softbody physics, Hair sim off, Hair Curve Density 10 - Multiplier 2, reflections texture size 512.\n\n" +
+                    "<b>Default:</b> Switch all settings back to VAM defaults (this isn't the same as the scene loaded with)\n\n" +
+                    "<b>Toggle all clothes Sim On/Off:</b> Toggles all clothing simulation Off / On \n\n" +
+                    "<color=#606060><size=40><b>Adjust Person On Load Look</b></size></color>\n" +
                     "The plugin will attempt to adjust a person on loading a look\n\n" +
                     "However it's only possible to do this if the name of the look changes (OnAtomUIDsChanged)\n\n" +
-                    "If the name of the loaded look is the same as the current person, it won't apply the settings</color>\n\n",
-                    480.0f, true
+                    "If the name of the loaded look is the same as the current person, it won't apply the settings\n\n",
+                    1580.0f, false
                 );
+
+                StartCoroutine(WaitForLoadingComplete());
 
             }
             catch (Exception e)
@@ -486,7 +530,19 @@ namespace Redeyes{
             }
         }
 
-        
+        private IEnumerator WaitForLoadingComplete()
+        {
+            while (SuperController.singleton.isLoading)
+                yield return 0;
+
+            while (SuperController.singleton.freezeAnimation)
+                yield return 0;
+
+            yield return 0;
+
+            _ready = true;
+        }
+
         private void OnSceneLoaded()
         {
             try {
@@ -508,7 +564,13 @@ namespace Redeyes{
                     HairMultiplierCallback(HairMultiplierValue);
                     CurveDensityCallback(CurveDensityValue);
                     HairWidthValueCallback(HairWidthValue);
-                    iterationsCallback(iterationsValue);
+                    HairWeightValueCallback(HairWeightValue);
+                    HairIterationsCallback(HairIterationsValue);
+                    if (overrideClothParametersState.val) {
+                        ClothWeightValueCallback(ClothWeightValue);
+                        ClothStiffnessValueCallback(ClothStiffnessValue);
+                        ClothIterationsValueCallback(ClothIterationsValue);
+                    }
                     doShaderChoice(shaderChooser.val);
                     ToggleBreastPhysicsFPS(BreastPhysicsState.val);
 
@@ -529,24 +591,24 @@ namespace Redeyes{
                 }
             }
             catch (Exception e) {
-                SuperController.LogError("Exception caught: " + e);
+                SuperController.LogError("Exception caught in OnSceneLoaded: " + e);
             }
         }
 
-        private void OnAtomUIDsChanged(List<string> test)
+        private void OnAtomUIDsChanged(List<string> atomUIDs)
         {
+            if (!_ready) return;
+            var sctrl = SuperController.singleton;
+            if (sctrl.isLoading) return;
+
             try {
                 if (overrideScenePreferencesState.val) {
-                     //foreach(string str in test)
-                     //{
-                     //  SuperController.LogMessage("GiveMeFPS - updated atom when appearance changes user preferences" + count + "str" + str);
-                     //}
-                    //SuperController.LogMessage("GiveMeFPS - updated atom when appearance changes user preferences" + count);
-                    ToggleHairSimulationFPS(HairSimulationState.val);
-                    HairMultiplierCallback(HairMultiplierValue);
-                    CurveDensityCallback(CurveDensityValue);
-                    HairWidthValueCallback(HairWidthValue);
-                    iterationsCallback(iterationsValue);
+                    //foreach(string str in atomUIDs)
+                    //{
+                    //SuperController.LogMessage("GiveMeFPS - updated atom when appearance changes user preferences" + str);
+                    //}
+                    StartCoroutine(DoClothAndHairCallbacks());
+
                     doShaderChoice(shaderChooser.val);
                     ToggleBreastPhysicsFPS(BreastPhysicsState.val);
                     ToggleLowerPhysicsFPS(LowerPhysicsState.val);
@@ -557,7 +619,67 @@ namespace Redeyes{
                 }
             }
             catch (Exception e) {
-                SuperController.LogError("Exception caught: " + e);
+                SuperController.LogError("Exception caught in OnAtomUIDsChanged: " + e);
+            }
+        }
+
+        private IEnumerator DoClothAndHairCallbacks()
+        {
+            cloth_ready_count=0;
+            while (true)
+            {
+                yield return new WaitForSeconds(0.51f);
+                hair_ready=true;
+                cloth_ready=true;
+                foreach (Atom atom in SuperController.singleton.GetAtoms())
+                {
+                    if (atom.type == "Person")
+                    {
+                        atom_name = atom.name;
+                        foreach (DAZHairGroup hairGroup in atom.GetComponentsInChildren<DAZHairGroup>())
+                        {
+                            HairSimControl hairControl = hairGroup.GetComponentInChildren<HairSimControl>();
+                            if (hairControl==null) {
+                                hair_ready=false;
+                            }
+                        }
+                        foreach (DAZClothingItem clothGroup in atom.GetComponentsInChildren<DAZClothingItem>())
+                        {
+                            ClothSimControl clothControl = clothGroup.GetComponentInChildren<ClothSimControl>();
+                            if (clothControl==null) {
+                                cloth_ready=false;
+                            }
+                        }
+                    }
+                }
+
+                if(hair_ready){
+                    ToggleHairSimulationFPS(HairSimulationState.val);
+                    HairMultiplierCallback(HairMultiplierValue);
+                    CurveDensityCallback(CurveDensityValue);
+                    HairWidthValueCallback(HairWidthValue);
+                    HairWeightValueCallback(HairWeightValue);
+                    HairIterationsCallback(HairIterationsValue);
+                    if (overrideClothParametersState.val && cloth_ready) {
+                        ClothStiffnessValueCallback(ClothStiffnessValue);
+                        ClothWeightValueCallback(ClothWeightValue);
+                        ClothIterationsValueCallback(ClothIterationsValue);
+                    }
+                }
+                if(hair_ready && cloth_ready){
+                    if (overrideClothParametersState.val ){
+                        SuperController.LogMessage("GiveMeFPS - updated " + atom_name + " hair and cloth preferences");
+                    }else{
+                        SuperController.LogMessage("GiveMeFPS - updated " + atom_name + " hair preferences");
+                    }
+                    yield break;
+                }
+
+                cloth_ready_count++;
+                if(cloth_ready_count>=5){
+                    SuperController.LogMessage("GiveMeFPS - updated " + atom_name + " some preferences");
+                    yield break;
+                }
             }
         }
 
@@ -576,7 +698,7 @@ namespace Redeyes{
             mirrorReflectionsState.val = false;
             smoothPassesValue.val = 0 ;
             ShaderLODChooser.val ="Low";
-            ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, true, true, true, "Fast", true, "1", "512", false);
+            ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, 1, 0.5F, 1.0F, 1, true, true, true, "Fast", true, "1", "512", false);
         }
 
         //CPU Bench
@@ -594,7 +716,7 @@ namespace Redeyes{
             mirrorReflectionsState.val = false;
             smoothPassesValue.val = 0 ;
             ShaderLODChooser.val ="Low";
-            ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, false, false, false, "Fast", true, "1", "512", false);
+            ExecuteGiveMeFPS(false, 10, 2, 0.00065000f, 1, 1, 0.5F, 1.0F, 1, false, false, false, "Fast", true, "1", "512", false);
         }
 
         //CPU Bench
@@ -621,7 +743,7 @@ namespace Redeyes{
             mirrorReflectionsState.val = mirrorReflectionsState_orginal.val;
             smoothPassesValue.val = smoothPassesValue_orginal.val;
             ShaderLODChooser.val = ShaderLODChooser_orginal.val;
-            ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 2, true, true, true, "Quality", false , "8", "1024", false);
+            ExecuteGiveMeFPS(true, 16, 16, 0.00010000f, 1, 2, 0.5F, 1.0F, 1, true, true, true, "Quality", false , "8", "1024", false);
         }
 
         //Preferences
@@ -778,13 +900,17 @@ namespace Redeyes{
         }
 
         //Quick buttons
-        public void ExecuteGiveMeFPS(bool HairSimulationState, float CurveDensityValue, float HairMultiplierValue, float HairWidthValue, float iterationsValue, bool BreastPhysicsState, bool LowerPhysicsState, bool TonguePhysicsState, string shaderTypeValue, bool disablePixelLightsState, string antiAliasingValue, string textureSizeValue, bool hairOnly )
+        public void ExecuteGiveMeFPS(bool HairSimulationState, float CurveDensityValue, float HairMultiplierValue, float HairWidthValue, float HairWeightValue, float HairIterationsValue, float ClothWeightValue, float ClothStiffnessValue, float ClothIterationsValue,bool BreastPhysicsState, bool LowerPhysicsState, bool TonguePhysicsState, string shaderTypeValue, bool disablePixelLightsState, string antiAliasingValue, string textureSizeValue, bool hairOnly )
         {
             onToggleHairSimulationState.toggle.isOn = !HairSimulationState;
-            iterationsSlider.slider.value = iterationsValue;
+            HairIterationsSlider.slider.value = HairIterationsValue;
             HairMultiplierSlider.slider.value = HairMultiplierValue;
             CurveDensitySlider.slider.value = CurveDensityValue;
             HairWidthValueSlider.slider.value = HairWidthValue;
+            HairWeightValueSlider.slider.value = HairWeightValue;
+            ClothWeightValueSlider.slider.value = ClothWeightValue;
+            ClothStiffnessValueSlider.slider.value = ClothStiffnessValue;
+            ClothIterationsValueSlider.slider.value = ClothIterationsValue;
             shaderChooser.val = shaderTypeValue;
 
             if (!hairOnly) {
@@ -807,15 +933,25 @@ namespace Redeyes{
                             hairControl.SetFloatParamValue("curveDensity", CurveDensityValue);
                             hairControl.SetFloatParamValue("hairMultiplier", HairMultiplierValue);
                             hairControl.SetFloatParamValue("width", HairWidthValue);
-                            hairControl.SetFloatParamValue("iterations", iterationsValue);
+                            hairControl.SetFloatParamValue("iterations", HairIterationsValue);
                             hairControl.SetStringChooserParamValue("shaderType", shaderTypeValue);
                         }
-                        //SuperController.LogMessage("test = " + hairControl);
                     }
                     if (!hairOnly) {
                         atom.GetStorableByID("BreastPhysicsMesh").GetBoolJSONParam("on").val=BreastPhysicsState;
                         atom.GetStorableByID("LowerPhysicsMesh").GetBoolJSONParam("on").val=LowerPhysicsState;
                         atom.GetStorableByID("TongueControl").GetBoolJSONParam("tongueCollision").val=TonguePhysicsState;
+                    }
+                    if (overrideClothParametersState.val) {
+                        foreach (DAZClothingItem clothGroup in atom.GetComponentsInChildren<DAZClothingItem>())
+                        {
+                            ClothSimControl clothControl = clothGroup.GetComponentInChildren<ClothSimControl>();
+                            if (clothControl!=null) {
+                                clothControl.SetFloatParamValue("stiffness", ClothStiffnessValue);
+                                clothControl.SetFloatParamValue("weight", ClothWeightValue);
+                                clothControl.SetFloatParamValue("iterations", ClothIterationsValue);
+                            }
+                        }
                     }
                 }
 
@@ -962,7 +1098,6 @@ namespace Redeyes{
                         if (hairControl!=null) {
                             hairControl.SetFloatParamValue("hairMultiplier", HairMultiplierValue.val);
                         }
-
                     }
                 }
             }
@@ -980,13 +1115,12 @@ namespace Redeyes{
                         if (hairControl!=null) {
                             hairControl.SetFloatParamValue("curveDensity", CurveDensityValue.val);
                         }
-
                     }
                 }
             }
         }
 
-        protected void iterationsCallback(JSONStorableFloat iterationsValue)
+        protected void HairIterationsCallback(JSONStorableFloat HairIterationsValue)
         {
             foreach (Atom atom in SuperController.singleton.GetAtoms())
             {
@@ -996,9 +1130,8 @@ namespace Redeyes{
                     {
                         HairSimControl hairControl = hairGroup.GetComponentInChildren<HairSimControl>();
                         if (hairControl!=null) {
-                            hairControl.SetFloatParamValue("iterations", iterationsValue.val);
+                            hairControl.SetFloatParamValue("iterations", HairIterationsValue.val);
                         }
-
                     }
                 }
             }
@@ -1016,12 +1149,94 @@ namespace Redeyes{
                         if (hairControl!=null) {
                             hairControl.SetFloatParamValue("width", HairWidthValue.val);
                         }
-
                     }
                 }
             }
         }
 
+        protected void HairWeightValueCallback(JSONStorableFloat HairWeightValue)
+        {
+            foreach (Atom atom in SuperController.singleton.GetAtoms())
+            {
+                if (atom.type == "Person")
+                {
+                    foreach (DAZHairGroup hairGroup in atom.GetComponentsInChildren<DAZHairGroup>())
+                    {
+                        HairSimControl hairControl = hairGroup.GetComponentInChildren<HairSimControl>();
+                        if (hairControl!=null) {
+                            hairControl.SetFloatParamValue("weight", HairWeightValue.val);
+                        }
+                    }
+                }
+            }
+        }
+
+        protected void ClothIterationsValueCallback(JSONStorableFloat ClothIterationsValue)
+        {
+            if (overrideClothParametersState.val) {
+                foreach (Atom atom in SuperController.singleton.GetAtoms())
+                {
+                    if (atom.type == "Person")
+                    {
+                        foreach (DAZClothingItem clothGroup in atom.GetComponentsInChildren<DAZClothingItem>())
+                        {
+                            ClothSimControl clothControl = clothGroup.GetComponentInChildren<ClothSimControl>();
+                            if (clothControl!=null) {
+                                clothControl.SetFloatParamValue("iterations", ClothIterationsValue.val);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        protected void ClothStiffnessValueCallback(JSONStorableFloat ClothStiffnessValue)
+        {
+            try {
+                if (overrideClothParametersState.val) {
+                    foreach (Atom atom in SuperController.singleton.GetAtoms())
+                    {
+                        if (atom.type == "Person")
+                        {
+                            foreach (DAZClothingItem clothGroup in atom.GetComponentsInChildren<DAZClothingItem>())
+                            {
+                                ClothSimControl clothControl = clothGroup.GetComponentInChildren<ClothSimControl>();
+                                if (clothControl!=null) {
+                                    clothControl.SetFloatParamValue("stiffness", ClothStiffnessValue.val);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e) {
+                SuperController.LogError("Exception caught3: " + e);
+            }
+        }
+
+        protected void ClothWeightValueCallback(JSONStorableFloat ClothWeightValue)
+        {
+            try {
+                if (overrideClothParametersState.val) {
+                    foreach (Atom atom in SuperController.singleton.GetAtoms())
+                    {
+                        if (atom.type == "Person")
+                        {
+                            foreach (DAZClothingItem clothGroup in atom.GetComponentsInChildren<DAZClothingItem>())
+                            {
+                                ClothSimControl clothControl = clothGroup.GetComponentInChildren<ClothSimControl>();
+                                if (clothControl!=null) {
+                                    clothControl.SetFloatParamValue("weight", ClothWeightValue.val);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e) {
+                SuperController.LogError("Exception caught3: " + e);
+            }
+        }
 
         private static JSONStorableString SetupInfoText(MVRScript script, string text, float height, bool rightSide)
         {
